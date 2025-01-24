@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1098476637240",
+    "project_id": "newdawn-2f47e",
+    "storage_bucket": "newdawn-2f47e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1098476637240:android:64f67f4b64fc3b75d8eacd",
+        "android_client_info": {
+          "package_name": "com.planner.newdawn"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB7Kq0x3c1lvPbpL_D8tfvCJZ_f8sGhrWA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

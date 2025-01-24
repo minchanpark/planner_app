@@ -1,0 +1,11 @@
+flutter_native_splash:
+  color: "#622223"
+  image: assets/SOI.png
+  #branding: assets/branding.png
+  android: true
+  ios: true
+  # web: true
+  # The following line is commented out by default to avoid conflicts with other plugins.
+  # See the "Customize the splash screen" section in the README for more
+  # information on what to do if you uncomment it.
+  resize_mode: contain
