@@ -9,7 +9,7 @@ import audio_session
 import audioplayers_darwin
 import cloud_firestore
 import emoji_picker_flutter
-import ffmpeg_kit_flutter
+import ffmpeg_kit_flutter_full_gpl
 import file_selector_macos
 import firebase_auth
 import firebase_core

@@ -26,7 +26,7 @@ class AuthFinalScreen extends StatelessWidget {
     AuthViewModel authViewModel =
         Provider.of<AuthViewModel>(context, listen: false);
     return Scaffold(
-      backgroundColor: AppTheme.lightTheme.colorScheme.secondary,
+      backgroundColor: AppTheme.lightTheme.colorScheme.surface,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -49,7 +49,7 @@ class AuthFinalScreen extends StatelessWidget {
                     birthDate,
                   );
                   Navigator.pushNamedAndRemoveUntil(
-                      context, '/home_screen', (route) => false);
+                      context, '/home_navigation_screen', (route) => false);
                 } catch (e) {
                   print('Error creating user in Firestore: $e');
                 }

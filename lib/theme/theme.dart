@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class AppTheme {
   // 라이트 테마 정의
   static ThemeData lightTheme = ThemeData(
-    colorScheme: _lightColorScheme,
+    colorScheme: _colorScheme,
     useMaterial3: true,
   );
 
@@ -19,13 +19,13 @@ class AppTheme {
   );
 
   // Light Mode 색상 정의
-  static const ColorScheme _lightColorScheme = ColorScheme(
-    primary: Color(0xff622223), // 키 컬러
-    secondary: Color(0xFFEAD8CA), // 보조 키 컬러
-    surface: Color(0xff232121), // 백그라운드 색상
+  static const ColorScheme _colorScheme = ColorScheme(
+    primary: Color(0xff634D45), // 키 컬러
+    secondary: Color(0xFFffffff), // 보조 키 컬러
+    surface: Color(0xff000000), // 백그라운드 색상
     error: Color(0xFFB00020), // 에러 색상
-    onPrimary: Color(0xFFFFFFFF), // 키 컬러 위 텍스트 색상
-    onSecondary: Color(0xFF000000), // 배경 위 텍스트 색상
+    onPrimary: Color(0xFFd9d9d9), // 키 컬러 위 텍스트 색상
+    onSecondary: Color(0xFFcfcfcf), // 배경 위 텍스트 색상
     onSurface: Color(0xFF000000), // 표면 위 텍스트 색상
     onError: Color(0xFFFFFFFF), // 에러 위 텍스트 색상
     brightness: Brightness.light, // 밝기 설정 (라이트 모드)
@@ -59,10 +59,10 @@ class AppTheme {
       color: Color(0xff232121), // 기본 색상
     ),
     labelMedium: TextStyle(
-      fontSize: 14,
+      fontSize: 16,
       fontFamily: 'inter',
       fontWeight: FontWeight.w500,
-      color: Color(0xff232121), // 기본 색상
+      color: Color(0xff535252), // 기본 색상
     ),
     labelSmall: TextStyle(
       fontSize: 12,

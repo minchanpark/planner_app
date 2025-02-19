@@ -3,14 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:planner/view/about_login/start_screen.dart';
+import 'package:planner/view/home_navigator_screen.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'service/notification_service.dart';
+import 'view/about_camera/camera_screen.dart';
+import 'view/about_category/category_add_screen.dart';
 import 'view/home_screen.dart';
 import 'view_model/auth_view_model.dart';
-import 'view_model/calendar_view_model.dart';
 import 'view_model/category_view_model.dart';
 import 'view_model/audio_view_model.dart';
+import 'view_model/comment_view_model.dart';
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -31,10 +34,10 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => CalendarViewModel()),
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => CategoryViewModel()),
         ChangeNotifierProvider(create: (_) => AudioViewModel()),
+        ChangeNotifierProvider(create: (_) => CommentAudioViewModel()),
       ],
       child: const MyApp(),
     ),
@@ -59,6 +62,9 @@ class MyApp extends StatelessWidget {
       routes: {
         '/home_screen': (context) => const HomeScreen(),
         '/start_screen': (context) => const StartScreen(),
+        '/home_navigation_screen': (context) => const HomePageNavigationBar(),
+        '/camera_screen': (context) => const CameraScreen(),
+        '/category_add_screen': (context) => const CategoryAddScreen(),
       },
     );
   }

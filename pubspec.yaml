@@ -48,7 +48,7 @@ dependencies:
   permission_handler: ^11.3.1
   firebase_messaging: ^15.2.0
   flutter_local_notifications: ^18.0.1
-  ffmpeg_kit_flutter: ^6.0.3
+  ffmpeg_kit_flutter_full_gpl: ^6.0.3
   video_player: ^2.9.2
   image: ^4.5.2
   flutter_dotenv: ^5.2.1
@@ -65,6 +65,7 @@ dependencies:
   emoji_picker_flutter: ^4.2.0
   flutter_sound: ^9.19.1
   audioplayers: ^6.1.0
+  lottie: ^3.3.1
 
 dev_dependencies:
   flutter_test:
@@ -101,6 +102,13 @@ flutter:
     - assets/voice.png
     - assets/brush.png
     - assets/text.png
+    - assets/plus_menu.png
+    - assets/category_plus.png
+    - assets/profile.png
+    - assets/recording_ui.png
+    - assets/recording.json
+    - assets/recording_ui.json
+    - assets/recording_progress.json
     - .env
   #   - images/a_dot_ham.jpeg
 

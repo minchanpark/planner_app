@@ -95,11 +95,11 @@ class NotificationService {
 
       authViewModel = Provider.of<AuthViewModel>(context, listen: false);
 
-      if (authViewModel.isLoggedIn) {
+      /* if (authViewModel.isLoggedIn) {
         navigatorKey.currentState?.pushNamed('/home_screen');
       } else {
         navigatorKey.currentState?.pushNamed('/auth_screen');
-      }
+      }*/
 
       showNotification(message).catchError((e) {
         print('알림 표시 중 오류 발생: $e');

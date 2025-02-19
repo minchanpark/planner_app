@@ -22,7 +22,7 @@ class StartScreen extends StatelessWidget {
       }
     });*/
     return Scaffold(
-      backgroundColor: AppTheme.lightTheme.colorScheme.primary,
+      backgroundColor: AppTheme.lightTheme.colorScheme.surface,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -43,7 +43,7 @@ class StartScreen extends StatelessWidget {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.lightTheme.colorScheme.secondary,
+                backgroundColor: AppTheme.lightTheme.colorScheme.primary,
                 padding: EdgeInsets.zero,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -56,7 +56,7 @@ class StartScreen extends StatelessWidget {
                 child: Text(
                   '시작하기',
                   style: TextStyle(
-                    color: AppTheme.lightTheme.colorScheme.primary,
+                    color: AppTheme.lightTheme.colorScheme.onPrimary,
                     fontSize: (24 / 852) * screenHeight,
                     fontWeight: FontWeight.w500,
                   ),

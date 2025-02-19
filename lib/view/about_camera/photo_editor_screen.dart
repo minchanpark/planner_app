@@ -1,48 +1,43 @@
 import 'dart:io';
-import 'dart:typed_data';
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:emoji_picker_flutter/emoji_picker_flutter.dart'; // 추가
+//import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+import 'package:lottie/lottie.dart';
+//import 'package:flutter/foundation.dart' as foundation;
 import '../../model/editable_text_model.dart';
 import '../../theme/theme.dart';
 import '../../view_model/auth_view_model.dart';
-import '../../view_model/calendar_view_model.dart';
 import '../../view_model/category_view_model.dart';
 import '../../view_model/audio_view_model.dart';
-import 'package:flutter/foundation.dart' as foundation;
 
 class PhotoEditorScreen extends StatefulWidget {
   final String imagePath;
-  final String pageName;
-  final categoryId;
 
   const PhotoEditorScreen({
-    super.key,
+    Key? key,
     required this.imagePath,
-    required this.pageName,
-    this.categoryId,
-  });
+  }) : super(key: key);
 
   @override
-  _PhotoEditorScreenState createState() => _PhotoEditorScreenState();
+  State<PhotoEditorScreen> createState() => _PhotoEditorScreenState();
 }
 
 class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
   final GlobalKey _globalKey = GlobalKey();
 
+  double get screenWidth => MediaQuery.of(context).size.width;
+  double get screenHeight => MediaQuery.of(context).size.height;
+
   // 텍스트 요소 리스트
-  List<EditableTextElement> _textElements = [];
+  final List<EditableTextElement> _textElements = [];
 
   // 이모지 피커 표시 여부
-  bool _showEmojiPicker = false;
+  //bool _showEmojiPicker = false;
 
-  @override
-  void initState() {
-    super.initState();
-  }
+  String dropdownValue = '';
+
+  String categoryId = '';
 
   @override
   void dispose() {
@@ -55,160 +50,290 @@ class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
   }
 
   // 이모지 선택 시 호출되는 메서드
-  void _onEmojiSelected(Emoji emoji) {
+  /*void _onEmojiSelected(Emoji emoji) {
     setState(() {
       _showEmojiPicker = false;
       // 새로운 이모지 요소 추가
       _textElements.add(
         EditableTextElement(
           text: emoji.emoji,
-          position: Offset(50, 50), // 초기 위치 설정
+          position: const Offset(50, 50), // 초기 위치 설정
           controller: TextEditingController(text: emoji.emoji),
           focusNode: FocusNode(),
           isEmoji: true,
         ),
       );
     });
-  }
-
-  // 텍스트 추가 시 호출되는 메서드
-  void _addText() {
-    setState(() {
-      // 새로운 텍스트 요소 추가
-      _textElements.add(
-        EditableTextElement(
-          text: '',
-          position: Offset(50, 50), // 초기 위치 설정
-          controller: TextEditingController(),
-          focusNode: FocusNode(),
-          isEmoji: false,
-        ),
-      );
-    });
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
-    var mediaQuery = MediaQuery.of(context);
+    final mediaQuery = MediaQuery.of(context);
     final audioViewModel = Provider.of<AudioViewModel>(context);
-    final categoryViewModel = Provider.of<CategoryViewModel>(context);
+    final isRecording = audioViewModel.isRecording;
 
     return Scaffold(
       backgroundColor: AppTheme.lightTheme.colorScheme.surface,
       appBar: AppBar(
-        automaticallyImplyLeading: false,
+        iconTheme: IconThemeData(
+          color: Colors.white, //색변경
+        ),
         title: Text(
           'SOI',
           style: TextStyle(color: AppTheme.lightTheme.colorScheme.secondary),
         ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: Icon(
-              Icons.add,
-              size: 35,
-              color: AppTheme.lightTheme.colorScheme.secondary,
-            ),
-          ),
-        ],
+        actions: [_photoEditButton()],
         backgroundColor: AppTheme.lightTheme.colorScheme.surface,
         toolbarHeight: 70,
       ),
-      body: GestureDetector(
-        onTap: () {
-          FocusScope.of(context).unfocus();
-          setState(() {
-            _showEmojiPicker = false;
-          });
-        },
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return Stack(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                RepaintBoundary(
-                  key: _globalKey,
-                  child: Stack(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          ClipRRect(
-                            borderRadius:
-                                BorderRadius.circular(16), // 테두리 반경 적용
-                            child: Image.file(
-                              File(widget.imagePath),
-                              width: (363 / 393) *
-                                  mediaQuery.size.width, // 화면 너비의 90% 정도로 설정
-                              height: (627 / 852) *
-                                  mediaQuery.size.height, // 화면 높이의 70% 정도로 설정
-                              fit: BoxFit.fill,
-                            ),
-                          ),
-                        ],
-                      ),
-                      // 모든 텍스트 요소 렌더링
-                      ..._textElements
-                          .map((element) => _buildEditableText(element))
-                          .toList(),
-                    ],
-                  ),
-                ),
-                Positioned(left: 125, top: 20, child: _photoEditButton()),
-                Positioned(
-                    top: 400,
-                    left: 50,
-                    child: _customImage(audioViewModel, categoryViewModel)),
-                // 이모지 피커 추가
-                _showEmojiPicker
-                    ? Align(
-                        alignment: Alignment.bottomCenter,
-                        child: SizedBox(
-                          height: 250,
-                          child: EmojiPicker(
-                            onEmojiSelected: (category, emoji) {
-                              _onEmojiSelected(emoji);
-                            },
-                            config: Config(
-                              height: 250,
-                              checkPlatformCompatibility: true,
-                              emojiViewConfig: EmojiViewConfig(
-                                // Issue: https://github.com/flutter/flutter/issues/28894
-                                emojiSizeMax: 28 *
-                                    (foundation.defaultTargetPlatform ==
-                                            TargetPlatform.iOS
-                                        ? 1.20
-                                        : 1.0),
-                              ),
-                              viewOrderConfig: const ViewOrderConfig(
-                                top: EmojiPickerItem.categoryBar,
-                                middle: EmojiPickerItem.emojiView,
-                                bottom: EmojiPickerItem.searchBar,
-                              ),
-                              skinToneConfig: const SkinToneConfig(),
-                              categoryViewConfig: const CategoryViewConfig(),
-                              bottomActionBarConfig:
-                                  const BottomActionBarConfig(),
-                              searchViewConfig: const SearchViewConfig(),
-                            ),
-                          ),
+                SizedBox(height: 51),
+
+                // 캡처 영역
+                Stack(
+                  children: [
+                    RepaintBoundary(
+                      key: _globalKey,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.file(
+                          File(widget.imagePath),
+                          width: (261 / 393) * mediaQuery.size.width,
+                          height: (451 / 852) * mediaQuery.size.height,
+                          fit: BoxFit.fill,
                         ),
-                      )
-                    : SizedBox(),
+                      ),
+                    ),
+                    Positioned(
+                      top: 250,
+                      left: 75,
+                      child: isRecording
+                          ? SizedBox(
+                              height: 100,
+                              child: Lottie.asset(
+                                'assets/recording_ui.json',
+                                repeat: true,
+                                animate: true,
+                              ),
+                            )
+                          : SizedBox(),
+                    ),
+                  ],
+                ),
+
+                // 상단 버튼들
+                //Positioned(top: 20, left: 20, child: _photoEditButton()),
+
+                TextField(
+                  style: AppTheme.lightTheme.textTheme.labelMedium!.copyWith(
+                    color: Color(0xff535252),
+                  ),
+                  decoration: InputDecoration(
+                    hintText: '켑션 추가하기...',
+                    hintStyle:
+                        AppTheme.lightTheme.textTheme.labelMedium!.copyWith(
+                      color: Color(0xff535252),
+                    ),
+                    border: InputBorder.none,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+
+                // 하단(혹은 특정 위치)의 기능 아이콘들(이모지, 텍스트, 오디오 등)
+                //_customImage(audioViewModel),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      onPressed: () async {
+                        if (isRecording) {
+                          await audioViewModel.stopRecording();
+                        } else {
+                          await audioViewModel.startRecording();
+                        }
+                      },
+                      icon: SizedBox(
+                        width: 52,
+                        height: 52,
+                        child: Image.asset(
+                          'assets/recording_ui.png',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                // 이모지 피커
+                /* if (_showEmojiPicker)
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: SizedBox(
+                      height: 250,
+                      child: EmojiPicker(
+                        onEmojiSelected: (category, emoji) {
+                          _onEmojiSelected(emoji);
+                        },
+                        config: Config(
+                          height: 250,
+                          checkPlatformCompatibility: true,
+                          emojiViewConfig: EmojiViewConfig(
+                            emojiSizeMax: 28 *
+                                (foundation.defaultTargetPlatform ==
+                                        TargetPlatform.iOS
+                                    ? 1.20
+                                    : 1.0),
+                          ),
+                          viewOrderConfig: const ViewOrderConfig(
+                            top: EmojiPickerItem.categoryBar,
+                            middle: EmojiPickerItem.emojiView,
+                            bottom: EmojiPickerItem.searchBar,
+                          ),
+                          skinToneConfig: const SkinToneConfig(),
+                          categoryViewConfig: const CategoryViewConfig(),
+                          bottomActionBarConfig: const BottomActionBarConfig(),
+                          searchViewConfig: const SearchViewConfig(),
+                        ),
+                      ),
+                    ),
+                  ),*/
               ],
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }
 
-  Widget _customImage(
-      AudioViewModel audioViewModel, CategoryViewModel categoryViewModel) {
+  /// 카테고리 드롭다운: Provider를 통해 카테고리 목록을 가져와 표시
+  /*_categoryDropDown() {
+    // 먼저 FutureBuilder를 사용하여 현재 로그인 유저의 닉네임을 가져옵니다.
+    return FutureBuilder<String>(
+      future: Provider.of<AuthViewModel>(context, listen: false)
+          .getNickNameFromFirestore(),
+      builder: (context, nickSnapshot) {
+        // 닉네임을 불러오는 동안 빈 공간을 반환합니다.
+        if (nickSnapshot.connectionState == ConnectionState.waiting) {
+          return SizedBox(width: 150, child: Text(''));
+        }
+        // 로그인 정보가 없으면 안내 메시지 표시
+        if (!nickSnapshot.hasData) {
+          return SizedBox(
+            width: 150,
+            child: Center(
+              child: Text(
+                '아직 카테고리가 없습니다.',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          );
+        }
+        final nickName = nickSnapshot.data!;
+        // 닉네임을 이용해 실시간 업데이트 스트림을 구독합니다.
+        return StreamBuilder<List<Map<String, dynamic>>>(
+          stream: Provider.of<CategoryViewModel>(context, listen: false)
+              .streamUserCategories(nickName),
+          builder: (context, catSnapshot) {
+            // 스트림 구독 중이면 빈 공간 반환
+            if (catSnapshot.connectionState == ConnectionState.waiting) {
+              return SizedBox(width: 150, child: Text(''));
+            }
+            // 에러나 데이터가 없으면 안내 메시지 표시
+            if (catSnapshot.hasError ||
+                !catSnapshot.hasData ||
+                catSnapshot.data!.isEmpty) {
+              return SizedBox(
+                width: 150,
+                child: Center(
+                  child: Text(
+                    '아직 카테고리가 없습니다.',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              );
+            }
+            final categories = catSnapshot.data!;
+            // 드롭다운 초기값 설정 (아직 값이 없으면 첫번째 항목 설정)
+            if (dropdownValue.isEmpty) {
+              dropdownValue = categories.first['name'] as String;
+              categoryId = categories.first['id'] as String;
+            }
+            return SizedBox(
+              width: 150,
+              child: DropdownMenu<String>(
+                initialSelection: dropdownValue,
+                inputDecorationTheme: InputDecorationTheme(
+                  enabledBorder:
+                      OutlineInputBorder(borderSide: BorderSide.none),
+                ),
+                trailingIcon: Icon(
+                  Icons.keyboard_arrow_down,
+                  color: Colors.white,
+                ),
+                selectedTrailingIcon: Icon(
+                  Icons.keyboard_arrow_up,
+                  color: Colors.white,
+                ),
+                menuStyle: MenuStyle(
+                  backgroundColor: WidgetStateProperty.all(Color(0xff232121)),
+                  shape: WidgetStateProperty.all(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
+                textStyle: TextStyle(color: Colors.white, fontSize: 20),
+                // 드롭다운 메뉴 항목 구성: 각 항목은 'name'과 'id'를 포함하는 Map입니다.
+                dropdownMenuEntries: categories.map<DropdownMenuEntry<String>>(
+                    (Map<String, dynamic> category) {
+                  return DropdownMenuEntry<String>(
+                    value: category['name'] as String,
+                    label: category['name'] as String,
+                    style: ButtonStyle(
+                      foregroundColor: WidgetStateProperty.all(
+                        dropdownValue == category['name']
+                            ? Colors.white
+                            : Colors.grey,
+                      ),
+                    ),
+                  );
+                }).toList(),
+                // 항목 선택 시 선택된 항목의 'name'과 대응되는 'id'를 저장합니다.
+                onSelected: (String? value) {
+                  if (value != null) {
+                    setState(() {
+                      dropdownValue = value;
+                      final selectedCategory = categories.firstWhere(
+                        (element) => element['name'] == value,
+                        orElse: () => {'id': ''},
+                      );
+                      categoryId = selectedCategory['id'] as String;
+                    });
+                  }
+                },
+              ),
+            );
+          },
+        );
+      },
+    );
+  }*/
+
+  /*Widget _customImage(AudioViewModel audioViewModel) {
+    final isRecording = audioViewModel.isRecording;
+
     return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        IconButton(
+        // 이모지 버튼
+        /*IconButton(
           onPressed: () {
-            // 이모지 피커 토글
             setState(() {
               _showEmojiPicker = !_showEmojiPicker;
             });
@@ -219,6 +344,7 @@ class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
             height: 52,
           ),
         ),
+        // 브러시 버튼
         IconButton(
           onPressed: () {
             // 브러시 기능 추가 시 구현
@@ -229,9 +355,9 @@ class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
             height: 52,
           ),
         ),
+        // 텍스트 추가 버튼
         IconButton(
           onPressed: () {
-            // 텍스트 추가
             _addText();
           },
           icon: Image.asset(
@@ -239,79 +365,109 @@ class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
             width: 52,
             height: 52,
           ),
-        ),
+        ),*/
+        // 녹음 버튼
         IconButton(
           onPressed: () async {
-            if (audioViewModel.isRecording) {
+            if (isRecording) {
               await audioViewModel.stopRecording();
             } else {
               await audioViewModel.startRecording();
             }
           },
-          icon: Image.asset(
-            'assets/voice.png',
+          icon: SizedBox(
             width: 52,
             height: 52,
+            child: Image.asset(
+              'assets/recording_ui.png',
+            ),
           ),
         ),
-        if (audioViewModel.audioFilePath != null) Text('Audio recorded'),
+        /* IconButton(
+          onPressed: () {},
+          icon: SizedBox(
+            width: 52,
+            height: 52,
+            child: Image.asset(
+              'assets/plus_menu.png',
+            ),
+          ),
+        ),*/
       ],
     );
-  }
+  }*/
 
+  /// 상단 '공유하기' / '추가하기 +' 버튼
   Widget _photoEditButton() {
     return Row(
       children: [
-        ElevatedButton(
+        //_categoryDropDown(),
+        //SizedBox(width: 90),
+        IconButton(
           onPressed: () {},
-          style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.all(
-              AppTheme.lightTheme.colorScheme.secondary,
-            ),
-            elevation: MaterialStateProperty.all(0),
-            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-              RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0),
-              ),
-            ),
-          ),
-          child: Text(
-            '공유하기',
-            style: AppTheme.textTheme.textTheme.labelMedium,
-          ),
+          icon: Icon(Icons.share, color: Colors.white),
         ),
-        SizedBox(width: 11),
-        ElevatedButton(
+        IconButton(
           onPressed: () async {
-            await _saveImageWithText();
-            Navigator.pop(context, widget.categoryId);
+            // 1. 캡처 영역 데이터를 미리 가져옵니다.
+            final boundary = _globalKey.currentContext?.findRenderObject()
+                as RenderRepaintBoundary?;
+            if (boundary == null) return;
+            final capturedImageFuture = boundary.toImage(pixelRatio: 2.0);
+
+            // 2. 필요한 Provider 데이터도 미리 받아옵니다.
+            final categoryViewModel =
+                Provider.of<CategoryViewModel>(context, listen: false);
+            final authViewModel =
+                Provider.of<AuthViewModel>(context, listen: false);
+            final audioViewModel =
+                Provider.of<AudioViewModel>(context, listen: false);
+
+            // 3. 카테고리 id와 닉네임 등 미리 캡처 (필요 시)
+            final currentCategoryId = categoryId;
+            final nickName = await authViewModel.getNickNameFromFirestore();
+            final audioFilePath = audioViewModel.audioFilePath;
+
+            // 4. 화면을 즉시 pop 합니다.
+            Navigator.pop(context);
+
+            // 5. pop 이후에 백그라운드로 저장 작업을 진행합니다.
+            categoryViewModel.saveEditedPhoto(
+              capturedImageFuture,
+              currentCategoryId,
+              nickName,
+              audioFilePath,
+            );
           },
-          style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.all(
-              AppTheme.lightTheme.colorScheme.secondary,
-            ),
-            elevation: MaterialStateProperty.all(0),
-            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-              RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0),
-              ),
-            ),
-          ),
-          child: Text(
-            '추가하기 +',
-            style: AppTheme.textTheme.textTheme.labelMedium,
-          ),
-        ),
+          icon: Icon(Icons.file_download_outlined, color: Colors.white),
+        )
       ],
     );
   }
 
-  // 수정된 텍스트 요소 위젯
-  Widget _buildEditableText(EditableTextElement element) {
+  // 텍스트 추가 시 호출되는 메서드
+  /*void _addText() {
+    setState(() {
+      // 새로운 텍스트 요소 추가
+      _textElements.add(
+        EditableTextElement(
+          text: '',
+          position: const Offset(50, 50), // 초기 위치 설정
+          controller: TextEditingController(),
+          focusNode: FocusNode(),
+          isEmoji: false,
+        ),
+      );
+    });
+  }*/
+
+  /// 수정된 텍스트/이모지 요소 위젯
+  /*Widget _buildEditableText(EditableTextElement element) {
     return Positioned(
       left: element.position.dx,
       top: element.position.dy,
       child: GestureDetector(
+        // 드래그로 위치 이동 가능
         onPanUpdate: (details) {
           setState(() {
             element.position += details.delta;
@@ -322,8 +478,8 @@ class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
             color: element.isEmoji ? Colors.transparent : Colors.black54,
             borderRadius: BorderRadius.circular(8),
           ),
-          constraints: BoxConstraints(
-            maxWidth: 300, // 컨테이너의 최대 너비 설정
+          constraints: const BoxConstraints(
+            maxWidth: 300, // 텍스트 컨테이너 최대 너비
           ),
           child: IntrinsicWidth(
             child: TextField(
@@ -334,78 +490,20 @@ class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
                 fontSize: 24,
               ),
               decoration: InputDecoration(
-                contentPadding: EdgeInsets.all(8),
+                contentPadding: const EdgeInsets.all(8),
                 hintText: element.isEmoji ? '' : '텍스트를 입력하세요',
-                hintStyle: TextStyle(
+                hintStyle: const TextStyle(
                   color: Colors.white70,
                   fontSize: 24,
                 ),
                 border: InputBorder.none,
               ),
               textAlign: TextAlign.center,
-              maxLines: null, // 여러 줄 허용
+              maxLines: null,
             ),
           ),
         ),
       ),
     );
-  }
-
-  Future<void> _saveImageWithText() async {
-    final calendarViewModel =
-        Provider.of<CalendarViewModel>(context, listen: false);
-    final categoryViewModel =
-        Provider.of<CategoryViewModel>(context, listen: false);
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-    final audioViewModel = Provider.of<AudioViewModel>(context, listen: false);
-
-    try {
-      final boundary = _globalKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
-      if (boundary == null) {
-        print('RenderRepaintBoundary is null');
-        return;
-      }
-
-      final ui.Image capturedImage = await boundary.toImage(pixelRatio: 3.0);
-      final ByteData? byteData =
-          await capturedImage.toByteData(format: ui.ImageByteFormat.png);
-      if (byteData == null) {
-        print('ByteData is null');
-        return;
-      }
-      final Uint8List pngBytes = byteData.buffer.asUint8List();
-
-      final appDir = await getApplicationDocumentsDirectory();
-      final filePath =
-          '${appDir.path}/${DateTime.now().millisecondsSinceEpoch}_edited.png';
-      final file = File(filePath);
-      await file.writeAsBytes(pngBytes);
-
-      await Future.delayed(
-          Duration(seconds: 1)); // 파일 시스템이 파일을 쓸 시간을 확보하기 위해 딜레이 추가
-
-      String? audioUrl;
-      if (audioViewModel.audioFilePath != null) {
-        audioUrl = await audioViewModel.uploadAudioToFirestore(
-          widget.categoryId,
-          await authViewModel.getNickNameFromFirestore(),
-        );
-      }
-
-      if (widget.pageName != "category") {
-        await calendarViewModel.uploadPhoto(filePath, DateTime.now());
-      } else {
-        await categoryViewModel.uploadPhoto(
-          widget.categoryId,
-          await authViewModel.getNickNameFromFirestore(),
-          filePath,
-          audioUrl ?? '',
-          context,
-        );
-      }
-    } catch (e) {
-      print('Error saving image: $e');
-    }
-  }
+  }*/
 }

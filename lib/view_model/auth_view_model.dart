@@ -7,6 +7,7 @@ class AuthViewModel extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   List<String> _searchResults = [];
+  List<String> _searchProfileImage = [];
 
   String verificationId = '';
   String smsCode = '';
@@ -16,6 +17,9 @@ class AuthViewModel extends ChangeNotifier {
 
   // 검색 결과 리스트 가져오기
   List<String> get searchResults => _searchResults;
+
+  // 프로필 이미지 가지고 오기
+  List<String> get searchProfileImage => _searchProfileImage;
 
   // 현재 로그인한 사용자 가져오기
   User? get getCurrentUserId => _auth.currentUser;
@@ -27,7 +31,12 @@ class AuthViewModel extends ChangeNotifier {
   //Stream<User?> get authStateChanges => _auth.authStateChanges();
 
   // 로그인 여부 확인
-  bool get isLoggedIn => _auth.currentUser != null;
+  //bool get isLoggedIn => _auth.currentUser != null;
+
+  void clearSearchResults() {
+    searchResults.clear();
+    notifyListeners();
+  }
 
   // 회원가입 시 사용자 정보를 Firestore에 저장
   Future<void> createUserInFirestore(
@@ -49,6 +58,7 @@ class AuthViewModel extends ChangeNotifier {
         'name': name,
         'phone': phone,
         'birth_date': birthDate,
+        'profile_image': '', // 프로필 이미지 URL
       }, SetOptions(merge: true));
     } catch (e) {
       print('Error creating user document: $e');
@@ -94,8 +104,8 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   // 사용자 검색 메서드
-  Future<void> searchNickName(String userID) async {
-    if (userID.isEmpty) return;
+  Future<void> searchNickName(String userNickName) async {
+    if (userNickName.isEmpty) return;
 
     try {
       // users 컬렉션의 모든 문서 가져오기
@@ -107,21 +117,43 @@ class AuthViewModel extends ChangeNotifier {
             String nickName = doc['nick_name'] as String;
 
             // 정확히 일치하는 경우
-            if (nickName == userID) return true;
+            if (nickName == userNickName) return true;
 
             // 3글자 이상 비슷한지 확인
             int matchCount = 0;
-            int minLength = nickName.length < userID.length
+            int minLength = nickName.length < userNickName.length
                 ? nickName.length
-                : userID.length;
+                : userNickName.length;
 
             for (int i = 0; i < minLength; i++) {
-              if (nickName[i] == userID[i]) matchCount++;
+              if (nickName[i] == userNickName[i]) matchCount++;
             }
 
             return matchCount >= 3;
           })
           .map((doc) => doc['nick_name'] as String)
+          .toList();
+
+      _searchProfileImage = result.docs
+          .where((doc) {
+            String nickName = doc['nick_name'] as String;
+
+            // 정확히 일치하는 경우
+            if (nickName == userNickName) return true;
+
+            // 3글자 이상 비슷한지 확인
+            int matchCount = 0;
+            int minLength = nickName.length < userNickName.length
+                ? nickName.length
+                : userNickName.length;
+
+            for (int i = 0; i < minLength; i++) {
+              if (nickName[i] == userNickName[i]) matchCount++;
+            }
+
+            return matchCount >= 3;
+          })
+          .map((doc) => doc['profile_image'] as String)
           .toList();
 
       notifyListeners();

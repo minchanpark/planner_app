@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../view_model/auth_view_model.dart';
 import '../../view_model/category_view_model.dart';
-import 'photo_about_category.dart';
+import 'category_screen_photo.dart';
 
 class CategoryScreen extends StatefulWidget {
   final String categoryId;
@@ -33,7 +33,8 @@ class _CategoryScreenState extends State<CategoryScreen> {
             } else if (!snapshot.hasData || snapshot.data == null) {
               return Text('No Category Name');
             } else {
-              return Text(snapshot.data!);
+              //return Text(snapshot.data!);
+              return Text("닉네임 검색하기");
             }
           },
         ),

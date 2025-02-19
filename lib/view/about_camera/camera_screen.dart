@@ -1,16 +1,17 @@
+//// filepath: /Users/mac/Documents/planner_app/lib/view/about_camera/camera_screen.dart
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:planner/theme/theme.dart';
-//import 'package:permission_handler/permission_handler.dart';
 import 'package:planner/view/about_camera/photo_editor_screen.dart';
 import 'dart:math' as math;
+import 'category_drop_down_widget.dart';
 
 class CameraScreen extends StatefulWidget {
-  final String pageName;
-  final categoryId;
+  final String categoryName;
+  final String categoryId;
 
-  const CameraScreen({super.key, required this.pageName, this.categoryId});
+  const CameraScreen({super.key, this.categoryName = '', this.categoryId = ''});
 
   @override
   _CameraScreenState createState() => _CameraScreenState();
@@ -24,57 +25,62 @@ class _CameraScreenState extends State<CameraScreen> {
   FlashMode _currentFlashMode = FlashMode.off;
   IconData flashIcon = MingCute.flash_fill;
   Color flashColor = Colors.white;
-  bool _isFlashAvailable = false; // 플래시 지원 여부
+  bool _isFlashAvailable = false;
+
+  // 드롭다운 메뉴 관련 상태 변수
+  String dropdownValue = '';
+  String categoryId = '';
 
   @override
   void initState() {
     super.initState();
-    //_checkAndRequestPermissions();
-    _initializeCamera();
+    // 전달받은 값이 있다면 초기값 한 번 설정
+    if (widget.categoryName.isNotEmpty) {
+      dropdownValue = widget.categoryName;
+      categoryId = widget.categoryId;
+    }
+    _initializeCamera(); // 카메라 초기화
   }
 
   @override
   void dispose() {
-    if (_controller!.value.isInitialized) {
-      _controller!.dispose();
-    }
+    _controller?.dispose();
     super.dispose();
   }
 
-  // 카메라 초기화하는 함수
+  /// 카메라를 초기화하고 첫 번째 카메라를 설정하는 함수
   Future<void> _initializeCamera() async {
     try {
       cameras = await availableCameras();
       if (cameras.isNotEmpty) {
         _setCamera(selectedCameraIndex);
       } else {
-        print('No cameras available');
+        debugPrint('No cameras available');
       }
-
-      if (_controller!.value.flashMode != _currentFlashMode) {
+      if (_controller != null &&
+          _controller!.value.flashMode != _currentFlashMode) {
         await _controller!.setFlashMode(_currentFlashMode);
       }
     } catch (e) {
-      print('Camera initialization error: $e');
+      debugPrint('Camera initialization error: $e');
     }
   }
 
+  /// 특정 인덱스의 카메라를 세팅하는 함수
   void _setCamera(int index) {
-    if (_controller != null) {
-      _controller!.dispose();
-    }
+    _controller?.dispose();
     _controller = CameraController(
       cameras[index],
       ResolutionPreset.high,
+      enableAudio: false,
     );
-
     _initializeControllerFuture = _controller!.initialize().catchError((e) {
-      print('Error initializing camera: $e');
+      debugPrint('Error initializing camera: $e');
     });
-
     setState(() {});
   }
 
+  /// 사진 촬영 후 PhotoEditorScreen으로 이동하는 함수
   Future<void> _takePicture() async {
     try {
       await _initializeControllerFuture;
@@ -84,53 +90,40 @@ class _CameraScreenState extends State<CameraScreen> {
         MaterialPageRoute(
           builder: (context) => PhotoEditorScreen(
             imagePath: image.path,
-            pageName: widget.pageName,
-            categoryId: widget.categoryId,
           ),
         ),
       );
     } catch (e) {
-      print(e);
+      debugPrint('Take picture error: $e');
     }
   }
 
-  // 카메라 전환 메서드
+  /// 카메라 전환 함수
   Future<void> _switchCamera() async {
     if (cameras.isEmpty) return;
-
     selectedCameraIndex = (selectedCameraIndex + 1) % cameras.length;
-
     await _controller?.dispose();
-
     _controller = CameraController(
       cameras[selectedCameraIndex],
       ResolutionPreset.high,
       enableAudio: false,
     );
-
     await _controller!.initialize();
-
-    // 플래시 지원 여부 확인
     _isFlashAvailable = _controller!.value.flashMode == FlashMode.off ||
         _controller!.value.flashMode == FlashMode.auto ||
         _controller!.value.flashMode == FlashMode.always;
-
-    print('플래시 지원 여부: $_isFlashAvailable');
-    print('현재 플래시 모드1: ${_controller!.value.flashMode}');
-
+    debugPrint('Flash available: $_isFlashAvailable');
     if (_isFlashAvailable) {
       await _controller!.setFlashMode(_currentFlashMode);
     }
-
     setState(() {});
   }
 
-  // 플래시 토글 메서드
+  /// 플래시 모드 토글 함수
   Future<void> _toggleFlash() async {
     if (_controller == null || !_controller!.value.isInitialized) return;
 
     FlashMode newFlashMode;
-
     switch (_currentFlashMode) {
       case FlashMode.off:
         newFlashMode = FlashMode.torch;
@@ -153,46 +146,30 @@ class _CameraScreenState extends State<CameraScreen> {
       setState(() {
         _currentFlashMode = newFlashMode;
       });
-
-      print('플래시 모드 변경 완료?: $newFlashMode');
-      print('현재 플래시 모드2: ${_currentFlashMode}');
+      debugPrint('Flash mode changed: $newFlashMode');
     } catch (e) {
-      print('플래시 모드 변경 오류: $e');
+      debugPrint('Flash mode change error: $e');
     }
   }
 
-  // 카메라 미리보기의 회전 및 미러링 적용
+  /// 카메라 미리보기 위젯
   Widget _buildCameraPreview() {
-    // 카메라 컨트롤러가 초기화되지 않았을 경우 로딩 표시
     if (_controller == null || !_controller!.value.isInitialized) {
-      return Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator());
     }
-
-    // 현재 디바이스의 회전 상태 가져오기
-    var mediaQuery = MediaQuery.of(context);
-    var rotation = mediaQuery.orientation;
-
-    // 회전 각도 계산
-    int rotationDegrees = 0;
-    switch (rotation) {
-      case Orientation.portrait:
-        rotationDegrees = 0;
-        break;
-      case Orientation.landscape:
-        rotationDegrees = 180;
-        break;
-    }
+    final mediaQuery = MediaQuery.of(context);
+    final rotationDegrees =
+        mediaQuery.orientation == Orientation.portrait ? 0 : 180;
 
     return Transform(
       transform: Matrix4.identity()
-        ..rotateY(0) // 전면 카메라일 경우 좌우반전
-        ..rotateZ(rotationDegrees * math.pi / 180), // 디바이스 회전에 따른 회전
+        ..rotateY(0)
+        ..rotateZ(rotationDegrees * math.pi / 180),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: SizedBox(
-          width: (363 / 393) * mediaQuery.size.width, // 화면 너비의 90% 정도로 설정
-          height: (627 / 852) * mediaQuery.size.height, // 화면 높이의 70% 정도로 설정
-
+          width: (363 / 393) * mediaQuery.size.width,
+          height: (627 / 852) * mediaQuery.size.height,
           child: AspectRatio(
             aspectRatio: _controller!.value.aspectRatio,
             child: CameraPreview(_controller!),
@@ -202,79 +179,44 @@ class _CameraScreenState extends State<CameraScreen> {
     );
   }
 
-  // 카메라 제어 버튼 모음
-  // 플래시 버튼, 카메라 전환 버튼, 촬영 버튼을 모은 위젯들임.
-  // 촬영 버튼은 따로 메서드로 분리하여 가독성 향상
+  /// 카메라 제어 버튼이 모여있는 위젯
   Widget _buildCameraControls() {
     return Row(
       children: [
         IconButton(
-          onPressed: () {
-            _toggleFlash();
-          },
+          onPressed: _toggleFlash,
           icon: Icon(
             flashIcon,
             color: flashColor,
             size: 30,
-          ), // 더 적절한 아이콘 사용
+          ),
         ),
-        SizedBox(width: 232),
+        const SizedBox(width: 50),
+        // 분리된 드롭다운 위젯 사용
+        const CategoryDropdownWidget(),
+        const SizedBox(width: 30),
         IconButton(
-          onPressed: () {
-            _switchCamera();
-          },
+          onPressed: _switchCamera,
           icon: Image.asset(
             'assets/camera_turn.png',
             width: 30,
             height: 30,
           ),
-        )
+        ),
       ],
     );
   }
-
-  /* GestureDetector(
-          onTap: _takePicture, // 별도의 메서드로 분리하여 가독성 향상
-          child: Container(
-            height: 70,
-            width: 70,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.white,
-                width: 5,
-              ),
-            ),
-          ),
-        ),*/
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.lightTheme.colorScheme.surface,
       appBar: AppBar(
-        automaticallyImplyLeading: false,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back,
-              color: AppTheme.lightTheme.colorScheme.secondary),
-          onPressed: () {
-            Navigator.pop(context, widget.categoryId); // 파라미터 전달
-          },
-        ),
+        iconTheme: const IconThemeData(color: Colors.white),
         title: Text(
           'SOI',
           style: TextStyle(color: AppTheme.lightTheme.colorScheme.secondary),
         ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: Icon(
-              Icons.add,
-              size: 35,
-              color: AppTheme.lightTheme.colorScheme.secondary,
-            ),
-          ),
-        ],
         backgroundColor: AppTheme.lightTheme.colorScheme.surface,
         toolbarHeight: 70,
       ),
@@ -287,9 +229,7 @@ class _CameraScreenState extends State<CameraScreen> {
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildCameraPreview(),
-                  ],
+                  children: [_buildCameraPreview()],
                 ),
                 Positioned(
                   top: 16,
@@ -298,7 +238,7 @@ class _CameraScreenState extends State<CameraScreen> {
                 Positioned(
                   top: (512 / 852) * MediaQuery.of(context).size.height,
                   child: GestureDetector(
-                    onTap: _takePicture, // 별도의 메서드로 분리하여 가독성 향상
+                    onTap: _takePicture,
                     child: SizedBox(
                       height: 65,
                       width: 65,
@@ -313,7 +253,7 @@ class _CameraScreenState extends State<CameraScreen> {
               ],
             );
           } else {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
         },
       ),

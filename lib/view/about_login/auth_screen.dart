@@ -49,20 +49,20 @@ class _AuthScreenState extends State<AuthScreen> {
     final double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppTheme.lightTheme.colorScheme.secondary,
+      backgroundColor: AppTheme.lightTheme.colorScheme.surface,
       body: PageView(
         controller: _pageController,
         physics: const NeverScrollableScrollPhysics(), // 스와이프로 이동 방지
         children: [
-          // 1. 전화번호 입력 페이지
-          _buildPhoneNumberPage(screenHeight),
-          // 2. 인증번호 입력 페이지
-          _buildSmsCodePage(screenHeight),
-          // 3. 이름 입력 페이지
+          // 1. 이름 입력 페이지
           _buildNamePage(screenHeight),
-          // 4. 생년월일 입력 페이지
+          // 2. 생년월일 입력 페이지
           _buildBirthDatePage(screenHeight),
-          // 5. 닉네임 입력 페이지
+          // 3. 전화번호 입력 페이지
+          _buildPhoneNumberPage(screenHeight),
+          //     인증번호 입력 페이지
+          _buildSmsCodePage(screenHeight),
+          // 4. 닉네임 입력 페이지
           _buildNickNamePage(screenHeight),
         ],
       ),
@@ -165,7 +165,7 @@ class _AuthScreenState extends State<AuthScreen> {
             fontSize: 18,
             fontWeight: FontWeight.w600,
             fontFamily: GoogleFonts.inter().fontFamily,
-            color: AppTheme.lightTheme.colorScheme.primary,
+            color: AppTheme.lightTheme.colorScheme.onSecondary,
           ),
           textAlign: TextAlign.center,
         ),
@@ -315,7 +315,7 @@ class _AuthScreenState extends State<AuthScreen> {
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
-            color: AppTheme.lightTheme.colorScheme.primary,
+            color: AppTheme.lightTheme.colorScheme.onSecondary,
           ),
           textAlign: TextAlign.center,
         ),
