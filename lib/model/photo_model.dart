@@ -8,6 +8,7 @@ class PhotoModel {
   final String userId;
   final String audioUrl; // 음성 녹음 URL 필드 추가
   final String id;
+  //final String captionString;
 
   PhotoModel({
     required this.imageUrl,
@@ -17,6 +18,7 @@ class PhotoModel {
     required this.userId,
     required this.audioUrl, // 선택적 필드로 추가
     required this.id,
+    //required this.captionString,
   });
 
   Map<String, dynamic> toMap() {
@@ -27,6 +29,7 @@ class PhotoModel {
       'userIds': userIds,
       'userId': userId,
       'audioUrl': audioUrl, // 맵에 추가
+      //'captionString': captionString,
     };
   }
 
@@ -39,6 +42,7 @@ class PhotoModel {
       userId: doc['userId'],
       audioUrl: doc['audioUrl'], // 문서에서 필드 가져오기
       id: doc.id,
+      //captionString: doc['captionString'],
     );
   }
 

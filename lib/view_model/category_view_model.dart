@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -9,7 +10,9 @@ import 'package:image/image.dart' as img;
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:planner/model/photo_model.dart';
+import 'package:planner/view_model/audio_view_model.dart';
 import '../service/gpt_vision_service.dart';
+import 'auth_view_model.dart';
 
 class CategoryViewModel extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -18,6 +21,87 @@ class CategoryViewModel extends ChangeNotifier {
   final List<String> _selectedNames = [];
 
   List<String> get selectedNames => _selectedNames;
+
+  String audioUrl = '';
+
+  /// 모든 카테고리 데이터를 가져오면서
+  /// 각 카테고리의 첫번째 사진 URL과 프로필 이미지들을 함께 합친 스트림
+  Stream<List<Map<String, dynamic>>> streamUserCategoriesWithDetails(
+    String nickName,
+    AuthViewModel authViewModel,
+  ) {
+    return _firestore
+        .collection('categories')
+        .where('mates', arrayContains: nickName)
+        .snapshots()
+        .asyncMap((querySnapshot) async {
+      final results = <Map<String, dynamic>>[];
+
+      for (final doc in querySnapshot.docs) {
+        final data = doc.data();
+        final categoryId = doc.id;
+        final mates = (data['mates'] as List).cast<String>();
+
+        // 첫번째 사진 URL을 한 번만 Future로 가져오기
+        final photosSnapshot = await _firestore
+            .collection('categories')
+            .doc(categoryId)
+            .collection('photos')
+            .orderBy('createdAt', descending: false)
+            .limit(1)
+            .get();
+
+        String? firstPhotoUrl;
+        if (photosSnapshot.docs.isNotEmpty) {
+          firstPhotoUrl =
+              photosSnapshot.docs.first.data()['imageUrl'] as String?;
+        }
+
+        // mates에 해당하는 프로필 이미지 목록 가져오기 (한 번만 Future로 처리)
+        final profileImages = await (() async {
+          if (mates.isEmpty) return [];
+          final completer = Completer<List<String>>();
+          final subscription = authViewModel.getprofileImages(mates).listen(
+            (urls) {
+              completer.complete(urls.cast<String>());
+            },
+            onError: (e) {
+              completer.completeError(e);
+            },
+          );
+          return completer.future.whenComplete(() => subscription.cancel());
+        })();
+
+        results.add({
+          'id': categoryId,
+          'name': data['name'],
+          'mates': mates,
+          'firstPhotoUrl': firstPhotoUrl,
+          'profileImages': profileImages,
+        });
+      }
+      return results;
+    });
+  }
+
+  //// filepath: /Users/mac/Documents/planner_app/lib/view_model/category_view_model.dart
+  /// 특정 카테고리 내의 photos 서브컬렉션에서
+  /// 가장 이전(오래된) 사진의 URL을 가져오는 함수.
+  /// createdAt 필드를 기준으로 오름차순 정렬하여 첫 번째 사진의 imageUrl을 반환합니다.
+  Stream<String?> getFirstPhotoUrlStream(String categoryId) {
+    return _firestore
+        .collection('categories')
+        .doc(categoryId)
+        .collection('photos')
+        .orderBy('createdAt', descending: false)
+        .snapshots()
+        .map((snapshot) {
+      if (snapshot.docs.isNotEmpty) {
+        return snapshot.docs.first.data()['imageUrl'] as String?;
+      }
+      return null;
+    });
+  }
 
   void toggleName(String name) {
     if (_selectedNames.contains(name)) {
@@ -38,6 +122,8 @@ class CategoryViewModel extends ChangeNotifier {
     String categoryId,
     String nickName,
     String? audioFilePath,
+    AudioViewModel audioViewModel,
+    String captionString,
   ) async {
     try {
       // 캡처된 이미지 Future 완료
@@ -55,10 +141,11 @@ class CategoryViewModel extends ChangeNotifier {
       await file.writeAsBytes(pngBytes);
 
       // 음성 파일 처리 (있다면)
-      String? audioUrl;
+
       if (audioFilePath != null) {
         // 예시: AudioViewModel에 있는 업로드 함수를 사용하거나 여기서 직접 업로드
-        // audioUrl = await uploadAudioToFirestorage(...);
+        audioUrl =
+            await audioViewModel.uploadAudioToFirestorage(categoryId, nickName);
       }
 
       // 사진 업로드 (context 의존성이 제거된 uploadPhoto로 처리)
@@ -66,7 +153,8 @@ class CategoryViewModel extends ChangeNotifier {
         categoryId,
         nickName,
         filePath,
-        audioUrl ?? '',
+        audioUrl,
+        captionString,
       );
     } catch (e) {
       debugPrint('Error saving edited photo: $e');
@@ -79,6 +167,7 @@ class CategoryViewModel extends ChangeNotifier {
     String nickName,
     String filePath,
     String audioUrl,
+    String captionString,
   ) async {
     final fileName = DateTime.now().millisecondsSinceEpoch.toString();
     final file = File(filePath);
@@ -113,6 +202,7 @@ class CategoryViewModel extends ChangeNotifier {
         userId: '', // 필요 시 현재 사용자 ID 또는 관련 값을 할당
         audioUrl: audioUrl,
         id: photoId,
+        //captionString: captionString,
       );
 
       // 4) Firestore에 사진 정보 저장
@@ -193,14 +283,15 @@ class CategoryViewModel extends ChangeNotifier {
   }
 
   /// 특정 유저 닉네임을 포함하는 카테고리 목록을 스트림으로 반환
-  Stream<List<Map<String, dynamic>>> streamUserCategories(String mates) {
+  Stream<List<Map<String, dynamic>>> streamUserCategories(String nickName) {
     // Firestore의 snapshots()를 이용해 실시간 업데이트를 감지합니다.
     return _firestore
         .collection('categories')
-        .where('mates', arrayContains: mates)
+        .where('mates', arrayContains: nickName)
         .snapshots()
         .map((querySnapshot) => querySnapshot.docs
-            .map((doc) => {'id': doc.id, 'name': doc['name']})
+            .map((doc) =>
+                {'id': doc.id, 'name': doc['name'], 'mates': doc['mates']})
             .toList());
   }
 

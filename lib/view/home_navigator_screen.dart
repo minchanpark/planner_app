@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:planner/view/about_camera/camera_screen.dart';
 import '../theme/theme.dart';
+import 'about_arcaving/archiving_screen.dart';
 import 'home_screen.dart';
+import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 
 class HomePageNavigationBar extends StatefulWidget {
   const HomePageNavigationBar({super.key});
@@ -27,6 +29,7 @@ class _HomePageNavigationBarState extends State<HomePageNavigationBar> {
         child: NavigationBar(
           indicatorColor: Colors.transparent,
           backgroundColor: AppTheme.lightTheme.colorScheme.surface,
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
           onDestinationSelected: (int index) {
             setState(() {
               currentPageIndex = index;
@@ -37,7 +40,7 @@ class _HomePageNavigationBarState extends State<HomePageNavigationBar> {
             const NavigationDestination(
               selectedIcon: Icon(
                 Icons.home,
-                color: Color(0xffead8ca),
+                color: Colors.white,
                 size: 31,
               ),
               icon: Icon(
@@ -56,20 +59,20 @@ class _HomePageNavigationBarState extends State<HomePageNavigationBar> {
               selectedIcon: Icon(
                 Icons.camera_alt,
                 size: 31,
-                color: Color(0xffead8ca),
+                color: Colors.white,
               ),
               label: '',
             ),
             const NavigationDestination(
               icon: Icon(
-                Icons.plus_one,
+                FluentIcons.archive_24_filled,
                 size: 31,
                 color: Color(0xff535252),
               ),
               selectedIcon: Icon(
-                Icons.plus_one,
+                FluentIcons.archive_24_filled,
                 size: 31,
-                color: Color(0xffead8ca),
+                color: Colors.white,
               ),
               label: '',
             ),
@@ -79,7 +82,7 @@ class _HomePageNavigationBarState extends State<HomePageNavigationBar> {
       body: <Widget>[
         const HomeScreen(),
         const CameraScreen(),
-        const CameraScreen(),
+        const ArchivingScreen(),
       ][currentPageIndex],
     );
   }

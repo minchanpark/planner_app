@@ -33,6 +33,21 @@ class AuthViewModel extends ChangeNotifier {
   // 로그인 여부 확인
   //bool get isLoggedIn => _auth.currentUser != null;
 
+  // mates에 맞는 사용자들의 프로필 이미지 리스트 가지고 오기
+  Stream<List> getprofileImages(List mates) {
+    if (mates.isEmpty) {
+      return Stream.value([]);
+    }
+
+    return _firestore
+        .collection('users')
+        .where('nick_name', whereIn: mates)
+        .snapshots()
+        .map((querySnapshot) => querySnapshot.docs
+            .map((doc) => doc['profile_image'] as String)
+            .toList());
+  }
+
   void clearSearchResults() {
     searchResults.clear();
     notifyListeners();
@@ -129,7 +144,7 @@ class AuthViewModel extends ChangeNotifier {
               if (nickName[i] == userNickName[i]) matchCount++;
             }
 
-            return matchCount >= 3;
+            return matchCount >= 2;
           })
           .map((doc) => doc['nick_name'] as String)
           .toList();
@@ -151,7 +166,7 @@ class AuthViewModel extends ChangeNotifier {
               if (nickName[i] == userNickName[i]) matchCount++;
             }
 
-            return matchCount >= 3;
+            return matchCount >= 2;
           })
           .map((doc) => doc['profile_image'] as String)
           .toList();

@@ -17,6 +17,12 @@ class AudioViewModel extends ChangeNotifier {
   final Duration _recordingDuration = Duration.zero;
   Duration get recordingDuration => _recordingDuration;
 
+  /// Getter: 녹음 중인지 여부
+  bool get isRecording => _isRecording;
+
+  /// Getter: 오디오 파일 경로
+  String? get audioFilePath => _audioFilePath;
+
   // 녹음 시간 갱신용 타이머
   //Timer? _timer;
 
@@ -57,6 +63,7 @@ class AudioViewModel extends ChangeNotifier {
     if (path != null) {
       _audioFilePath = path;
     }
+    print('Audio file path: $_audioFilePath');
     notifyListeners(); // 녹음 상태 변경 알림
   }
 
@@ -88,14 +95,9 @@ class AudioViewModel extends ChangeNotifier {
         FirebaseStorage.instance.ref().child('categories_audio/$fileName');
     final file = File(mp3FilePath);
     await ref.putFile(file);
+    _audioFilePath = null; // 파일 경로 초기화
     return await ref.getDownloadURL();
   }
-
-  /// Getter: 녹음 중인지 여부
-  bool get isRecording => _isRecording;
-
-  /// Getter: 오디오 파일 경로
-  String? get audioFilePath => _audioFilePath;
 
   @override
   void dispose() {

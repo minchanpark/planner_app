@@ -37,7 +37,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => CategoryViewModel()),
         ChangeNotifierProvider(create: (_) => AudioViewModel()),
-        ChangeNotifierProvider(create: (_) => CommentAudioViewModel()),
+        ChangeNotifierProvider(create: (_) => CommentAudioViewModel())
       ],
       child: const MyApp(),
     ),
