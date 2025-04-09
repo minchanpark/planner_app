@@ -3,7 +3,6 @@ import 'package:planner/theme/theme.dart';
 import 'package:planner/view_model/auth_view_model.dart';
 import 'package:solar_icons/solar_icons.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 import 'auth_final_screen.dart';
 
 class AuthScreen extends StatefulWidget {
